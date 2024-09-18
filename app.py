@@ -10,13 +10,10 @@ from huggingface_hub import InferenceClient
 app = Flask(__name__)
 
 # Initialize the text generation pipeline
-pipe = pipeline('text-generation', model='gpt2')  # Or any other model you prefer
+ # Or any other model you prefer
 
 # Initialize the Hugging Face InferenceClient for the chat model
-client = InferenceClient(
-    "google/gemma-2-2b-it",
-    token="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"
-)
+
 
 # Hugging Face API configuration for image generation
 API_URL = "https://api-inference.huggingface.co/models/Yntec/HyperRealism"
@@ -82,24 +79,6 @@ def music_generator():
 # Literature Generator Page Route
 @app.route('/literature-generator', methods=['GET', 'POST'])
 def literature_generator():
-    if request.method == 'POST':
-        writing_type = request.form['type']
-        description = request.form['description']
-        length = int(request.form['length'])
-
-        # Prepare the input prompt based on user input
-        prompt = f"write a {writing_type} on {description}"
-        response_text = ""
-        for message in client.chat_completion(
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=500,
-            stream=True
-        ):
-            response_text += message.choices[0].delta.content
-        
-        return jsonify({'generated_text': response_text})
-
-    # Render the form if GET request
     return render_template('literature-generator.html')
 
 # About Page Route
