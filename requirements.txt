@@ -5,8 +5,3 @@ Pillow==9.5.0
 transformers==4.32.0
 gunicorn
 google-generativeai
-numpy
-MIDIUtil
-transformers
-spacy
-torch
