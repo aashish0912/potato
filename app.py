@@ -1,31 +1,40 @@
+import os
 import requests
 import io
-import PIL
-from PIL import Image
-from flask import Flask, render_template, request, jsonify
+from PIL import Image, UnidentifiedImageError
+from flask import Flask, render_template, request, jsonify, send_from_directory
 import base64
 from transformers import pipeline
 from huggingface_hub import InferenceClient
+from music_genrator import MusicGenerator 
+import google.generativeai as genai# Import your music generator class
 
 app = Flask(__name__)
 
-# Initialize the text generation pipeline
- # Or any other model you prefer
 
-# Initialize the Hugging Face InferenceClient for the chat model
 
+# Replace 'YOUR_API_KEY' with your actual API key
+genai.configure(api_key="AIzaSyDHAfBkaEK3BrUKL04UKz-9KoCZDnZSNcg")
+
+# Select the Gemini model
+model = genai.GenerativeModel("gemini-1.5-flash")
+
+# Prompt for text generation
+
+
+# Folder to save generated music files
+UPLOAD_FOLDER = 'generated_music'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Hugging Face API configuration for image generation
 API_URL = "https://api-inference.huggingface.co/models/Yntec/HyperRealism"
 headers = {"Authorization": "Bearer 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"}
 
-# Function to generate literature
-def generate_literature(writing_type, description, length):
-    prompt = f"Generate a {writing_type} based on the following description: {description}"
-    result = pipe(prompt, max_length=length, num_return_sequences=1)
-    return result[0]['generated_text']
+# Initialize the text generation pipeline for literature generation
+pipe = pipeline("text-generation", model="gpt2")  # Use "gpt2" or a similar model
 
-# Function to query the Hugging Face API for image generation
+
+# Function to query Hugging Face API for image generation
 def query_huggingface(payload):
     response = requests.post(API_URL, headers=headers, json=payload)
     return response.content
@@ -60,7 +69,7 @@ def image_generator():
             # Render the template with the generated image
             return render_template('image-generator.html', image_url=image_url)
         
-        except PIL.UnidentifiedImageError:
+        except UnidentifiedImageError:
             return render_template('image-generator.html', error="Unable to generate an image. Please try again.")
     
     # Render the form if GET request
@@ -72,14 +81,49 @@ def home():
     return render_template('index.html')
 
 # Music Generator Page Route
-@app.route('/music-generator')
-def music_generator():
-    return render_template('music-generator.html')
+@app.route('/music-generator', methods=['GET', 'POST'])
+def music_generator_page():
+    generated_file = None
+
+    if request.method == 'POST':
+        # Get the prompt or music description from the user
+        prompt = request.form.get('prompt')
+
+        # Initialize the MusicGenerator
+        music_generator = MusicGenerator()
+        
+        # Generate music and save it to the 'generated_music' folder
+        result = music_generator.generate_music(prompt)
+        filename = result['file']
+        generated_file = f"/generated_music/{filename}"
+
+        # Return the page with the download link
+        return render_template('music-generator.html', generated_file="generated_music")
+    
+    return render_template('music-generator.html', generated_file="generated_music")
 
 # Literature Generator Page Route
 @app.route('/literature-generator', methods=['GET', 'POST'])
 def literature_generator():
-    return render_template('literature-generator.html')
+    generated_text = None
+
+    if request.method == 'POST':
+        writing_type = request.form.get('type')
+        theme = request.form.get('theme')
+        length = int(request.form.get('length'))
+
+        prompt = f"Write a {writing_type} about {theme} with {length} words in a single line."
+
+        response = model.generate_content(prompt)
+        generated_text = response.text
+
+        # You can return the generated text directly as a string:
+        return render_template('literature-generator.html', generated_text=generated_text)
+
+        # Or you can return it as JSON:
+        #return jsonify({'generated_text': generated_text})
+
+    return render_template('literature-generator.html', generated_text=generated_text)
 
 # About Page Route
 @app.route('/about')
@@ -91,5 +135,14 @@ def about():
 def contact():
     return render_template('contact.html')
 
+# Serve generated music file
+@app.route('/generated_music/<filename>')
+def download_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
 if __name__ == '__main__':
+    # Make sure the generated_music folder exists
+    if not os.path.exists(UPLOAD_FOLDER):
+        os.makedirs(UPLOAD_FOLDER)
+    
     app.run(debug=True)
