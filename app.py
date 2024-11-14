@@ -22,7 +22,7 @@ model = genai.GenerativeModel("gemini-1.5-flash")
 
 # Hugging Face API configuration for image generation
 API_URL = "https://api-inference.huggingface.co/models/Yntec/HyperRealism"
-headers = {"Authorization": "Bearer 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"}
+headers = {"Authorization": "Bearer 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"}
 
 # Function to generate literature
 def generate_literature(writing_type, description, length):
