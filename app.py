@@ -14,7 +14,7 @@ app = Flask(__name__)
  # Or any other model you prefer
 
 # Initialize the Hugging Face InferenceClient for the chat model
-genai.configure(api_key="AIzaSyDHAfBkaEK3BrUKL04UKz-9KoCZDnZSNcg")
+genai.configure(api_key="AIzaSyDzP1t1R-qJ89kKpx0F55ilJzeVhycRMzQ")
 
 # Select the Gemini model
 model = genai.GenerativeModel("gemini-1.5-flash")
@@ -22,7 +22,7 @@ model = genai.GenerativeModel("gemini-1.5-flash")
 
 # Hugging Face API configuration for image generation
 API_URL = "https://api-inference.huggingface.co/models/Yntec/HyperRealism"
-headers = {"Authorization": "Bearer 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"}
+headers = {"Authorization": "Bearer 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"}
 
 # Function to generate literature
 def generate_literature(writing_type, description, length):
