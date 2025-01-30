@@ -4,31 +4,18 @@ import PIL
 from PIL import Image
 from flask import Flask, render_template, request, jsonify
 import base64
-from transformers import pipeline
-from huggingface_hub import InferenceClient
+import random
 import google.generativeai as genai
 
 app = Flask(__name__)
 
-# Initialize the text generation pipeline
- # Or any other model you prefer
-
-# Initialize the Hugging Face InferenceClient for the chat model
+# Initialize the Gemini model
 genai.configure(api_key="AIzaSyDzP1t1R-qJ89kKpx0F55ilJzeVhycRMzQ")
-
-# Select the Gemini model
 model = genai.GenerativeModel("gemini-1.5-flash")
-
 
 # Hugging Face API configuration for image generation
 API_URL = "https://api-inference.huggingface.co/models/Yntec/HyperRealism"
 headers = {"Authorization": "Bearer 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"}
-
-# Function to generate literature
-def generate_literature(writing_type, description, length):
-    prompt = f"Generate a {writing_type} based on the following description: {description}"
-    result = pipe(prompt, max_length=length, num_return_sequences=1)
-    return result[0]['generated_text']
 
 # Function to query the Hugging Face API for image generation
 def query_huggingface(payload):
@@ -91,16 +78,15 @@ def literature_generator():
         theme = request.form.get('theme')
         length = int(request.form.get('length'))
 
-        prompt = f"Write a {writing_type} about {theme} with {length} words in a single line."
+        # Add some randomness to the prompt
+        random_element = random.choice(["Imagine", "Consider", "Think about", "Picture"])
+        prompt = f"{random_element} a {writing_type} about {theme} with {length} words in a single line."
 
-        response = model.generate_content(prompt)
+        # Generate content with a higher temperature for variability
+        response = model.generate_content(prompt, generation_config={"temperature": 0.7})
         generated_text = response.text
 
-        # You can return the generated text directly as a string:
         return render_template('literature-generator.html', generated_text=generated_text)
-
-        # Or you can return it as JSON:
-        #return jsonify({'generated_text': generated_text})
 
     return render_template('literature-generator.html', generated_text=generated_text)
 
